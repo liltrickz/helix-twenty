@@ -10,11 +10,17 @@
 # (ni SSO ni dominios por workspace de pago).
 FROM twentycrm/twenty:v2.30.0
 USER root
+# La imagen es Alpine: su grep (BusyBox) no admite --include ni su sed \b, por
+# eso se busca con find y se sustituye con grupos (build fallida 27-09-2026).
 RUN set -e; \
-    ficheros=$(grep -rl "MAX_WORKSPACES_WITHOUT_ENTERPRISE_KEY" /app --include="*.js" | head -20); \
+    ficheros=$(find /app -name '*.js' -not -path '*/node_modules/*' -exec grep -l "MAX_WORKSPACES_WITHOUT_ENTERPRISE_KEY" {} + | head -20); \
     [ -n "$ficheros" ] || { echo "constante no encontrada: la version base cambio"; exit 1; }; \
     for f in $ficheros; do \
-      sed -i 's/MAX_WORKSPACES_WITHOUT_ENTERPRISE_KEY = 5\b/MAX_WORKSPACES_WITHOUT_ENTERPRISE_KEY = 500/g; s/MAX_WORKSPACES_WITHOUT_ENTERPRISE_KEY=5\b/MAX_WORKSPACES_WITHOUT_ENTERPRISE_KEY=500/g' "$f"; \
+      grep -n "MAX_WORKSPACES_WITHOUT_ENTERPRISE_KEY *= *[0-9]" "$f" || true; \
+      sed -i 's/\(MAX_WORKSPACES_WITHOUT_ENTERPRISE_KEY *= *\)5\([^0-9]\)/\1500\2/g; s/\(MAX_WORKSPACES_WITHOUT_ENTERPRISE_KEY *= *\)5$/\1500/' "$f"; \
     done; \
-    grep -rq "MAX_WORKSPACES_WITHOUT_ENTERPRISE_KEY ?= ?500" /app --include="*.js" -E || \
-      { echo "el parche no se aplico (patron distinto en esta build)"; grep -rn "MAX_WORKSPACES_WITHOUT_ENTERPRISE_KEY" /app --include="*.js" | head -5; exit 1; }
+    grep -E -q "MAX_WORKSPACES_WITHOUT_ENTERPRISE_KEY ?= ?500" $ficheros || \
+      { echo "el parche no se aplico (patron distinto en esta build)"; grep -n "MAX_WORKSPACES_WITHOUT_ENTERPRISE_KEY" $ficheros | head -5; exit 1; }; \
+    ! grep -E -q "MAX_WORKSPACES_WITHOUT_ENTERPRISE_KEY ?= ?5[^0-9]" $ficheros || \
+      { echo "queda una definicion a 5 sin parchear"; exit 1; }
+USER 1000
