@@ -7,8 +7,9 @@ Imagen de [Twenty CRM](https://github.com/twentyhq/twenty) v2.43.0 usada por Hel
   `packages/twenty-server/src/engine/core-modules/auth/`, sin marca
   `@license Enterprise`, por tanto AGPLv3).
 - Un script de una línea al principio de `index.html` del front: en `/verify` con
-  `loginToken`, apaga la marca local de sesión activa antes de que arranque la app, para
-  que canjear el token no choque con una sesión ya abierta en el mismo navegador.
+  `loginToken`, cierra la sesión que el navegador ya tuviera (mutación `signOut`) y apaga la
+  marca local de sesión activa antes de que arranque la app, para que canjear el token no
+  choque con esa sesión (el servidor la revoca y la app se desconectaba entera).
 
 Este repositorio existe en cumplimiento de la licencia AGPLv3 (art. 13): contiene la
 modificación completa aplicada a la versión que servimos. El código fuente íntegro de
