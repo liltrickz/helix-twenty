@@ -8,7 +8,7 @@
 # artículo 13 de la AGPL, este Dockerfile (la modificación completa) se publica
 # en un repositorio público. No se usa ningún fichero "@license Enterprise"
 # (ni SSO ni dominios por workspace de pago).
-FROM twentycrm/twenty:v2.30.0
+FROM twentycrm/twenty:v2.43.0
 USER root
 # La imagen es Alpine: su grep (BusyBox) no admite --include ni su sed \b, por
 # eso se busca con find y se sustituye con grupos (build fallida 27-09-2026).
